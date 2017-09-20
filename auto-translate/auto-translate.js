@@ -3,6 +3,9 @@ var cheerio = require('cheerio');
 var Rx = require('rxjs/Rx');
 
 var re = /([가-힣]+[\s\n~!@#$%^&*,\-_+=?/><]*)+[가-힣]+|[가-힣]+/g;
+// var re = /([가-힣]+[\s\n~!@#$%^&*,\-_+=?/><]*)+[가-힣]+|[가-힣]+/g;
+// var re = /([가-힣]+[\s~!@#$%^&*,\-_+=?/><\(\)\'0-9\.]*)+[가-힣]+|[가-힣\s~!@#$%^&*,\-_+=?/><\(\)\'0-9\.]+/g;
+// var re = /(?=[가-힣\s\n~\(\)])/g;
 var htmlFileRegex = /\.html$/;
 
 exports.autoTranslate = function (filePath, jsonFile) {
@@ -115,7 +118,9 @@ exports.makeTranslateList = function (filePath) {
     readDir(filePath);
   } else if(fs.statSync(filePath).isFile()){
     if (htmlFileRegex.test(filePath)) {
-      htmlFilePaths.push(filePath);
+      if(checkExceptHTML(filePath)){
+        htmlFilePaths.push(filePath);
+      }
     }
   }
 
@@ -127,7 +132,9 @@ exports.makeTranslateList = function (filePath) {
       }
     } else {
       if (htmlFileRegex.test(filePath)) {
-        htmlFilePaths.push(filePath);
+        if(checkExceptHTML(filePath)){
+          htmlFilePaths.push(filePath);
+        }
       }
       return;
     }
@@ -139,9 +146,10 @@ exports.makeTranslateList = function (filePath) {
   }
 
   var transList = [];
-
+  var fileName = '';
   for (var i = 0; i < htmlFilePaths.length; i++) {
     var fileData = fs.readFileSync(htmlFilePaths[i]);
+    fileName = htmlFilePaths[i].slice(htmlFilePaths[i].lastIndexOf('/') + 1)
     var $ = cheerio.load(fileData, {
       decodeEntities: false,
       ignoreWhitespace: false
@@ -154,13 +162,18 @@ exports.makeTranslateList = function (filePath) {
       }
 
       if (elem.nodeType == 3) {
-        var krText = $(elem).text().match(re);
+        // var krText = $(elem).text().match(re);
+        var krText = $(elem).text();
         if (krText) {
-          for (var i = 0; i < krText.length; i++) {
-            krText[i] = krText[i].replace(/\s{2,}/g, ' ');
-            krText[i] = krText[i].replace(/\n/g, '');
-            transList.push(krText[i]);
-          }
+          krText = krText.replace(/\s{2,}/g, ' ');
+          krText = krText.replace(/\n/g, '');
+          transList.push(fileName);
+          transList.push(krText);
+          // for (var i = 0; i < krText.length; i++) {
+          //   krText[i] = krText[i].replace(/\s{2,}/g, ' ');
+          //   krText[i] = krText[i].replace(/\n/g, '');
+          //   transList.push(krText[i]);
+          // }
         }
       }
     });
@@ -181,3 +194,22 @@ exports.makeTranslateList = function (filePath) {
       console.log('Successfully saved at output.json');
     });
 };
+
+
+function checkExceptHTML(filePath) {
+
+  var exceptList = ['usage-policy.component.html', 'privacy-policy.component.html'];
+  var index = exceptList.findIndex(function(except){
+    if(filePath.match(except)){
+      return true;
+    } else {
+      return false;
+    }
+  })
+  if(index > -1) {
+    return false;
+  }
+  else {
+    return true
+  };
+}

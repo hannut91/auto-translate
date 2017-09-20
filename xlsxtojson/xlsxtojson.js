@@ -34,5 +34,3 @@ exports.xlsxtojson = function (xlsxFilePath, langLength) {
     }
   });
 };
-
-

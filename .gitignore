@@ -1,3 +1,7 @@
 node_modules/
 .idea/
 .DS_Store
+output.json
+output.txt
+appzet_web.txt
+final.txt

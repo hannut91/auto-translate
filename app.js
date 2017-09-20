@@ -51,6 +51,7 @@ rl.question('Please select mode :\n1) Parse xlsx to json 2) Making translate lis
       rl.question('Insert directory path or html file path: ', function (filePath) {
         fs.stat(filePath, function (err, stat) {
           if (err) {
+            console.error(err);
             console.log("Please enter directory path or html file path");
             rl.close();
             return;
